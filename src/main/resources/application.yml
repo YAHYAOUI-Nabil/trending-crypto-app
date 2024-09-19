@@ -1,0 +1,23 @@
+server:
+  port: 9192
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: treading
+  datasource:
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    url: ${DATABASE_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      format-sql: true
+    servlet:
+      multipart:
+        max-file-size: 5MB
+        max-request-size: 5MB
+        file-size-threshold: 2KB
