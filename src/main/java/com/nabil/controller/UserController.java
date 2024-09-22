@@ -1,9 +1,13 @@
 package com.nabil.controller;
 
-import com.nabil.config.JwtProvider;
+import com.nabil.request.ForgotPasswordTokenRequest;
 import com.nabil.domain.VerificationType;
+import com.nabil.model.ForgotPasswordToken;
 import com.nabil.model.User;
 import com.nabil.model.VerificationCode;
+import com.nabil.request.ResetPasswordRequest;
+import com.nabil.response.ApiResponse;
+import com.nabil.response.AuthResponse;
 import com.nabil.service.EmailService;
 import com.nabil.service.ForgotPasswordService;
 import com.nabil.service.UserService;
@@ -13,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -91,15 +97,49 @@ public class UserController {
     }
 
     @PostMapping("/reset-password/send-otp")
-    public ResponseEntity<String> sendForgotPasswordOtp(
-            @RequestHeader("Authorization") String jwt,
-            @PathVariable VerificationType verificationType) throws Exception {
+    public ResponseEntity<AuthResponse> sendForgotPasswordOtp(
+            @RequestBody ForgotPasswordTokenRequest req) throws Exception {
 
-        User user = userService.findUserProfileByJwt(jwt);
+        User user = userService.findUserProfileByJwt(req.getSendTo());
         String otp = OtpUtils.generateOtp();
+        UUID uuid = UUID.randomUUID();
+        String id = uuid.toString();
 
-        VerificationCode verificationCode = verificationCodeService.getVerificationCodeByUser(user.getId());
+        ForgotPasswordToken token = forgotPasswordService.findByUser(user.getId());
 
-        return new ResponseEntity<>("Forgot password otp sent successfully.", HttpStatus.OK);
+        if(token == null) {
+            token = forgotPasswordService.createToken(user, id, otp, req.getVerificationType(), req.getSendTo());
+        }
+
+        if(req.getVerificationType().equals(VerificationType.EMAIL)) {
+            emailService.sendVerificationOtpEmail(user.getEmail(), token.getOtp());
+        }
+
+        AuthResponse response = new AuthResponse();
+
+        response.setSession(token.getId());
+        response.setMessage("Password reset otp sent successfully");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PatchMapping("/reset-password/verify-otp")
+    public ResponseEntity<ApiResponse> resetPassword(
+            @RequestParam String id, @RequestBody ResetPasswordRequest req) throws Exception {
+
+        ForgotPasswordToken token = forgotPasswordService.findById(id);
+        boolean isVerified = token.getOtp().equals(req.getOtp());
+
+        if(isVerified) {
+            userService.updatePassword(token.getUser(), req.getPassword());
+            ApiResponse response = new ApiResponse();
+
+            response.setMessage("Password updated successfully.");
+
+            return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        }
+
+        throw new Exception("Wrong otp.");
+
     }
 }
