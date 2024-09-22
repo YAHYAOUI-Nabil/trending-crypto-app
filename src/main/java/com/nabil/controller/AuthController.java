@@ -1,10 +1,14 @@
 package com.nabil.controller;
 
 import com.nabil.config.JwtProvider;
+import com.nabil.model.TwoFactorOTP;
 import com.nabil.model.User;
 import com.nabil.repository.UserRepository;
 import com.nabil.response.AuthResponse;
 import com.nabil.service.CustomUserDetailsService;
+import com.nabil.service.EmailService;
+import com.nabil.service.TwoFactorOtpService;
+import com.nabil.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
@@ -24,11 +25,17 @@ import java.util.Objects;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final TwoFactorOtpService twoFactorOtpService;
+    private final EmailService emailService;
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    public AuthController(UserRepository userRepository, CustomUserDetailsService customUserDetailsService, TwoFactorOtpService twoFactorOtpService, EmailService emailService) {
+        this.userRepository = userRepository;
+        this.customUserDetailsService = customUserDetailsService;
+        this.twoFactorOtpService = twoFactorOtpService;
+        this.emailService = emailService;
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
@@ -73,14 +80,33 @@ public class AuthController {
         String email = user.getEmail();
         String password = user.getPassword();
 
-
-
-
         Authentication auth = authenticate(email, password);
+
+        User authUser = userRepository.findByEmail(email);
 
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String jwt = JwtProvider.generateToken(auth);
+
+        if(user.getTwoFactorAuth().isEnabled()) {
+            AuthResponse response = new AuthResponse();
+
+            response.setMessage("Two factor auth is enabled.");
+            response.setTwoFactorAuthEnabled(true);
+            String otp = OtpUtils.generateOtp();
+
+            TwoFactorOTP oldTwoFactorOTP = twoFactorOtpService.findByUser(authUser.getId());
+            if(oldTwoFactorOTP != null) {
+                twoFactorOtpService.deleteTwoFactorOtp(oldTwoFactorOTP);
+            }
+            TwoFactorOTP newTwoFactorOTP = twoFactorOtpService.createTwoFactorOTP(authUser, otp, jwt);
+
+            emailService.sendVerificationOtpEmail(email, otp);
+
+            response.setSession(newTwoFactorOTP.getOtp());
+
+            return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        }
 
         AuthResponse response = new AuthResponse();
 
@@ -91,6 +117,22 @@ public class AuthController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
 
+    }
+
+    @PostMapping("two-factor/otp/{otp}")
+    public ResponseEntity<AuthResponse> verifySignInOtp(@RequestBody String otp, @RequestParam String id) throws Exception {
+        TwoFactorOTP twoFactorOTP = twoFactorOtpService.findById(id);
+
+        if (twoFactorOtpService.verifyTwoFactorOtp(twoFactorOTP, otp)) {
+            AuthResponse response = new AuthResponse();
+
+            response.setMessage("Two factor OTP verified");
+            response.setTwoFactorAuthEnabled(true);
+            response.setJwt(twoFactorOTP.getJwt());
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        throw new Exception("Invalid OTP");
     }
 
     private Authentication authenticate(String email, String password) {
