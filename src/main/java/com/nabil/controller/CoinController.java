@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/coins")
@@ -61,7 +60,7 @@ public class CoinController {
         return new ResponseEntity<>(jsonNode, HttpStatus.OK);
     }
 
-    @GetMapping("/details/{coinId}")
+    @GetMapping("/{coinId}")
     ResponseEntity<Coin> findCoinById(@PathVariable String coinId) throws Exception {
         Coin coin = coinService.findById(coinId);
         return new ResponseEntity<>(coin, HttpStatus.OK);
