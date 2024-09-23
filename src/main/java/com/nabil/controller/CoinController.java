@@ -21,19 +21,19 @@ public class CoinController {
     private ObjectMapper objectMapper;
 
     @GetMapping
-    ResponseEntity<List<Coin>> getCoinList(@RequestParam("page") int page) throws Exception {
+    ResponseEntity<List<Coin>> getCoinList(@RequestParam(name="page") int page) throws Exception {
         return new ResponseEntity<>(coinService.getCoinList(page), HttpStatus.OK);
     }
 
     @GetMapping("{coinId}/chart")
-    ResponseEntity<JsonNode> getMarketChart(@RequestParam("days") int days, @PathVariable String coinId) throws Exception {
+    ResponseEntity<JsonNode> getMarketChart(@RequestParam(name="days") int days, @PathVariable String coinId) throws Exception {
         String response = coinService.getMarketChart(coinId, days);
         JsonNode jsonNode = objectMapper.readTree(response);
         return new ResponseEntity<>(jsonNode, HttpStatus.OK);
     }
 
     @GetMapping("/search")
-    ResponseEntity<JsonNode> searchCoin(@RequestParam("query") String keyword) throws Exception {
+    ResponseEntity<JsonNode> searchCoin(@RequestParam(name="query") String keyword) throws Exception {
         String response = coinService.searchCoin(keyword);
         JsonNode jsonNode = objectMapper.readTree(response);
         return new ResponseEntity<>(jsonNode, HttpStatus.OK);

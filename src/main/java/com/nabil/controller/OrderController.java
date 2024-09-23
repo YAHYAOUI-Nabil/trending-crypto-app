@@ -23,7 +23,7 @@ public class OrderController {
     private final OrderService orderService;
     private final UserService userService;
     private final CoinService coinService;
-    private final WalletTransactionService walletTransactionService;
+//    private final WalletTransactionService walletTransactionService;
 
     @PostMapping("/pay")
     public ResponseEntity<Order> payOrderPayment(

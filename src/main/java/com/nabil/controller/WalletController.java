@@ -1,10 +1,9 @@
 package com.nabil.controller;
 
-import com.nabil.model.Order;
-import com.nabil.model.User;
-import com.nabil.model.Wallet;
-import com.nabil.model.WalletTransaction;
+import com.nabil.model.*;
+import com.nabil.response.PaymentResponse;
 import com.nabil.service.OrderService;
+import com.nabil.service.PaymentService;
 import com.nabil.service.UserService;
 import com.nabil.service.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +21,8 @@ public class WalletController {
     private final UserService userService;
 
     private final OrderService orderService;
+
+    private final PaymentService paymentService;
 
     @GetMapping
     public ResponseEntity<Wallet> getUserWallet(@RequestHeader("Authorization") String token) throws Exception {
@@ -57,6 +58,27 @@ public class WalletController {
         Order order = orderService.getOrderById(orderId);
 
         Wallet wallet = walletService.payOrderPayment(order, user);
+
+        return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
+
+    }
+
+    @PutMapping("/deposit")
+    public ResponseEntity<Wallet> addBalanceToWallet(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(name="order_id") Long orderId,
+            @RequestParam(name="payment_id") String paymentId
+    ) throws Exception {
+
+        User user = userService.findUserProfileByJwt(token);
+
+        Wallet wallet = walletService.getUserWallet(user);
+
+        PaymentOrder order = paymentService.getPaymentOrderById(orderId);
+
+        Boolean status = paymentService.proceedPaymentOrder(order, paymentId);
+
+        if(status) wallet = walletService.addBalance(wallet, order.getAmount());
 
         return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
 
