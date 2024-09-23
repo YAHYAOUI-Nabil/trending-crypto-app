@@ -4,6 +4,7 @@ import com.nabil.model.Order;
 import com.nabil.model.User;
 import com.nabil.model.Wallet;
 import com.nabil.model.WalletTransaction;
+import com.nabil.service.OrderService;
 import com.nabil.service.UserService;
 import com.nabil.service.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ public class WalletController {
     private final WalletService walletService;
 
     private final UserService userService;
+
+    private final OrderService orderService;
 
     @GetMapping
     public ResponseEntity<Wallet> getUserWallet(@RequestHeader("Authorization") String token) throws Exception {

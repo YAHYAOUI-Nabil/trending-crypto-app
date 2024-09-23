@@ -1,0 +1,11 @@
+package com.nabil.request;
+
+import com.nabil.domain.OrderType;
+import lombok.Data;
+
+@Data
+public class CreateOrderRequest {
+    private String coinId;
+    private double quantity;
+    private OrderType orderType;
+}
