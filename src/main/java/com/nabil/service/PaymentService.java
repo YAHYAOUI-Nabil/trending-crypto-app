@@ -15,7 +15,7 @@ public interface PaymentService {
 
     Boolean proceedPaymentOrder(PaymentOrder paymentOrder, String PaymentId) throws RazorpayException;
 
-    PaymentResponse createRazorpayPaymentLing(User user, Long amount);
+    PaymentResponse createRazorpayPaymentLing(User user, Long amount, Long orderId);
 
     PaymentResponse createStripePaymentLing(User user, Long amount, Long orderId) throws StripeException;
 

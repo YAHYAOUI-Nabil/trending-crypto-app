@@ -6,16 +6,16 @@ import com.nabil.model.TwoFactorAuth;
 import com.nabil.model.User;
 import com.nabil.repository.UserRepository;
 import com.nabil.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public User findUserProfileByJwt(String jwt) throws Exception {

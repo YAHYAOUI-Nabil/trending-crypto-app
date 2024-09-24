@@ -46,7 +46,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
 
     @Override
     public List<Withdrawal> getUsersWithdrawalHistory(User user) {
-        return withdrawalRepository.findByUser(user.getId());
+        return withdrawalRepository.findByUserId(user.getId());
     }
 
     @Override

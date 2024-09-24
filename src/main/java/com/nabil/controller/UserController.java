@@ -33,7 +33,7 @@ public class UserController {
 
     private final ForgotPasswordService forgotPasswordService;
 
-    @PostMapping("/profile")
+    @GetMapping("/profile")
     public ResponseEntity<User> getUserProfile(@RequestHeader("Authorization") String jwt) throws Exception {
         User user = userService.findUserProfileByJwt(jwt);
         return new ResponseEntity<>(user, HttpStatus.OK);

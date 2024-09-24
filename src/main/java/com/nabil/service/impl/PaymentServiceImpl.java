@@ -43,6 +43,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentOrder.setUser(user);
         paymentOrder.setAmount(amount);
         paymentOrder.setPaymentMethod(paymentMethod);
+        paymentOrder.setStatus(PaymentOrderStatus.PENDING);
 
         return paymentRepository.save(paymentOrder);
     }
@@ -55,6 +56,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Boolean proceedPaymentOrder(PaymentOrder paymentOrder, String paymentId) throws RazorpayException {
+        if(paymentOrder.getStatus() == null) {
+            paymentOrder.setStatus(PaymentOrderStatus.PENDING);
+        }
+
         if(paymentOrder.getStatus().equals(PaymentOrderStatus.PENDING)) {
             if(paymentOrder.getPaymentMethod().equals(PaymentMethod.RAZORPAY)) {
                 RazorpayClient razorpay = new RazorpayClient(razorpayApiKey, razorpayApiSecretKey);
@@ -79,13 +84,13 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponse createRazorpayPaymentLing(User user, Long amount) {
+    public PaymentResponse createRazorpayPaymentLing(User user, Long amount, Long orderId) {
         amount = amount * 100;
 
         try {
             RazorpayClient razorpay = new RazorpayClient(razorpayApiKey, razorpayApiSecretKey);
 
-            JSONObject paymentLinkRequest = getJsonObject(user, amount);
+            JSONObject paymentLinkRequest = getJsonObject(user, amount, orderId);
 
             PaymentLink payment = razorpay.paymentLink.create(paymentLinkRequest);
 
@@ -103,7 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @NotNull
-    private static JSONObject getJsonObject(User user, Long amount) {
+    private static JSONObject getJsonObject(User user, Long amount, Long orderId) {
         JSONObject paymentLinkRequest = new JSONObject();
         paymentLinkRequest.put("amount", amount);
         paymentLinkRequest.put("currency", "INR");
@@ -119,7 +124,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentLinkRequest.put("notify", notify);
         paymentLinkRequest.put("reminder_enable", true);
-        paymentLinkRequest.put("callback_url", "http://localhost:8080/wallet");
+        paymentLinkRequest.put("callback_url", "http://localhost:8080/wallet?order_id=" + orderId);
         paymentLinkRequest.put("callback_method", "get");
         return paymentLinkRequest;
     }

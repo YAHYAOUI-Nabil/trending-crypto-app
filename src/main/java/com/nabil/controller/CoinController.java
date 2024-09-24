@@ -18,7 +18,7 @@ public class CoinController {
 
     private final CoinService coinService;
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
     ResponseEntity<List<Coin>> getCoinList(@RequestParam(name="page") int page) throws Exception {
@@ -30,6 +30,19 @@ public class CoinController {
         String response = coinService.getMarketChart(coinId, days);
         JsonNode jsonNode = objectMapper.readTree(response);
         return new ResponseEntity<>(jsonNode, HttpStatus.OK);
+    }
+
+    @GetMapping("/details/{coinId}")
+    ResponseEntity<JsonNode> getCoinDetails(@PathVariable String coinId) throws Exception {
+        String response = coinService.getCoinDetails(coinId);
+        JsonNode jsonNode = objectMapper.readTree(response);
+        return new ResponseEntity<>(jsonNode, HttpStatus.OK);
+    }
+
+    @GetMapping("/{coinId}")
+    ResponseEntity<Coin> findCoinById(@PathVariable String coinId) throws Exception {
+        Coin coin = coinService.findById(coinId);
+        return new ResponseEntity<>(coin, HttpStatus.OK);
     }
 
     @GetMapping("/search")
@@ -46,23 +59,11 @@ public class CoinController {
         return new ResponseEntity<>(jsonNode, HttpStatus.OK);
     }
 
-    @GetMapping("/treading")
-    ResponseEntity<JsonNode> getTreadingCoins() throws Exception {
-        String response = coinService.getTreadingCoins();
+    @GetMapping("/trending")
+    ResponseEntity<JsonNode> getTrendingCoins() throws Exception {
+        String response = coinService.getTrendingCoins();
         JsonNode jsonNode = objectMapper.readTree(response);
         return new ResponseEntity<>(jsonNode, HttpStatus.OK);
     }
 
-    @GetMapping("/details/{coinId}")
-    ResponseEntity<JsonNode> getTreadingCoins(@PathVariable String coinId) throws Exception {
-        String response = coinService.getCoinDetails(coinId);
-        JsonNode jsonNode = objectMapper.readTree(response);
-        return new ResponseEntity<>(jsonNode, HttpStatus.OK);
-    }
-
-    @GetMapping("/{coinId}")
-    ResponseEntity<Coin> findCoinById(@PathVariable String coinId) throws Exception {
-        Coin coin = coinService.findById(coinId);
-        return new ResponseEntity<>(coin, HttpStatus.OK);
-    }
 }

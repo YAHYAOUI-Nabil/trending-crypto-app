@@ -25,11 +25,11 @@ public class CoinServiceImpl implements CoinService {
 
     private final CoinRepository coinRepository;
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public List<Coin> getCoinList(int page) throws Exception {
-        String url = "https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=" + page;
+        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=" + page;
         RestTemplate restTemplate = new RestTemplate();
 
         try {
@@ -48,7 +48,7 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String getMarketChart(String coinId, int days) throws Exception {
-        String url = "https://pro-api.coingecko.com/api/v3/coins/"+coinId+"/market_chart?vs_currency=usd&days=" + days;
+        String url = "https://api.coingecko.com/api/v3/coins/"+coinId+"/market_chart?vs_currency=usd&days=" + days;
         RestTemplate restTemplate = new RestTemplate();
 
         try {
@@ -67,7 +67,7 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String getCoinDetails(String coinId) throws Exception {
-        String url = "https://pro-api.coingecko.com/api/v3/coins/"+coinId;
+        String url = "https://api.coingecko.com/api/v3/coins/"+coinId;
         RestTemplate restTemplate = new RestTemplate();
 
         try {
@@ -77,6 +77,7 @@ public class CoinServiceImpl implements CoinService {
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
+
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
 
             Coin coin = new Coin();
@@ -85,22 +86,23 @@ public class CoinServiceImpl implements CoinService {
             coin.setSymbol(jsonNode.get("symbol").asText());
             coin.setImage(jsonNode.get("image").get("large").asText());
 
-            JsonNode markedData = jsonNode.get("marked_data");
+            JsonNode marketData = jsonNode.get("market_data");
 
-            coin.setCurrentPrice(markedData.get("current_price").get("usd").asDouble());
-            coin.setMarketCap(markedData.get("market_cap").get("usd").asLong());
-            coin.setMarketCapRank(markedData.get("market_cap_rank").get("usd").asInt());
-            coin.setTotalVolume(markedData.get("total_volume").get("usd").asLong());
-            coin.setHigh24h(markedData.get("high_24h").get("usd").asDouble());
-            coin.setLow24h(markedData.get("low_24h").get("usd").asDouble());
-            coin.setPriceChange24h(markedData.get("price_change_24h").get("usd").asDouble());
-            coin.setPriceChangePercentage24h(markedData.get("price_change_percentage_24h").get("usd").asDouble());
+            coin.setCurrentPrice(marketData.get("current_price").get("usd").asDouble());
+            coin.setMarketCap(marketData.get("market_cap").get("usd").asLong());
+            coin.setMarketCapRank(marketData.get("market_cap_rank").asInt());
+            coin.setTotalVolume(marketData.get("total_volume").get("usd").asLong());
+            coin.setHigh24h(marketData.get("high_24h").get("usd").asDouble());
+            coin.setLow24h(marketData.get("low_24h").get("usd").asDouble());
+            coin.setPriceChange24h(marketData.get("price_change_24h").asDouble());
+            coin.setPriceChangePercentage24h(marketData.get("price_change_percentage_24h").asDouble());
 
-            coin.setMarketCapChange24h(markedData.get("market_cap_change_24h").asLong());
-            coin.setMarketCapChangePercentage24h(markedData.get("market_cap_change_percentage_24h").asLong());
-            coin.setTotalSupply(markedData.get("total_supply").asLong());
+            coin.setMarketCapChange24h(marketData.get("market_cap_change_24h").asLong());
+            coin.setMarketCapChangePercentage24h(marketData.get("market_cap_change_percentage_24h").asLong());
+            coin.setTotalSupply(marketData.get("total_supply").asLong());
 
             coinRepository.save(coin);
+
 
             return response.getBody();
 
@@ -120,7 +122,7 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String searchCoin(String keyword) throws Exception {
-        String url = "https://pro-api.coingecko.com/api/v3/search?query=" + keyword;
+        String url = "https://api.coingecko.com/api/v3/search?query=" + keyword;
         RestTemplate restTemplate = new RestTemplate();
 
         try {
@@ -139,7 +141,7 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String getTop50CoinsByMarketCapRank() throws Exception {
-        String url = "https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50&page=1";
+        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50&page=1";
         RestTemplate restTemplate = new RestTemplate();
 
         try {
@@ -157,8 +159,8 @@ public class CoinServiceImpl implements CoinService {
     }
 
     @Override
-    public String getTreadingCoins() throws Exception {
-        String url = "https://pro-api.coingecko.com/api/v3/search/treading";
+    public String getTrendingCoins() throws Exception {
+        String url = "https://api.coingecko.com/api/v3/search/trending";
         RestTemplate restTemplate = new RestTemplate();
 
         try {

@@ -28,6 +28,6 @@ public class PaymentDetailsServiceImpl implements PaymentDetailsService {
 
     @Override
     public PaymentDetails getusersPaymentDetails(User user) {
-        return paymentDetailsRepository.findByUser(user.getId());
+        return paymentDetailsRepository.findByUserId(user.getId());
     }
 }

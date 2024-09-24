@@ -8,7 +8,9 @@ import com.nabil.response.AuthResponse;
 import com.nabil.service.CustomUserDetailsService;
 import com.nabil.service.EmailService;
 import com.nabil.service.TwoFactorOtpService;
+import com.nabil.service.WatchListService;
 import com.nabil.utils.OtpUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,19 +25,14 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final UserRepository userRepository;
     private final CustomUserDetailsService customUserDetailsService;
     private final TwoFactorOtpService twoFactorOtpService;
     private final EmailService emailService;
-
-    public AuthController(UserRepository userRepository, CustomUserDetailsService customUserDetailsService, TwoFactorOtpService twoFactorOtpService, EmailService emailService) {
-        this.userRepository = userRepository;
-        this.customUserDetailsService = customUserDetailsService;
-        this.twoFactorOtpService = twoFactorOtpService;
-        this.emailService = emailService;
-    }
+    private final WatchListService watchListService;
 
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
@@ -53,6 +50,8 @@ public class AuthController {
         newUser.setPassword(user.getPassword());
 
         User savedUser = userRepository.save(newUser);
+
+        watchListService.createUserWatchList(savedUser);
 
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 user.getEmail(),
